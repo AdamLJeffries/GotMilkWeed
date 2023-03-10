@@ -86,20 +86,27 @@ namespace GotMilkWeed.Controllers
         }
 
         [HttpGet("regions")]
-        public ActionResult<Dictionary<string, List<MilkweedVariety>>> GetRegionsAndVarieties()
+        public ActionResult<List<string>> GetRegions()
         {
             var varieties = _repository.GetAllAsync().Result;
-            var regions = new Dictionary<string, List<MilkweedVariety>>();
-            foreach (var variety in varieties)
-            {
-                if (!regions.ContainsKey(variety.Region))
-                {
-                    regions.Add(variety.Region, new List<MilkweedVariety>());
-                }
-                regions[variety.Region].Add(variety);
-            }
+            var regions = varieties.Select(v => v.Region).Distinct().ToList();
             return Ok(regions);
         }
-    }
 
+        [HttpGet("ecoregions")]
+        public string GetEcoregions()
+        {
+            var ecoregions = new List<string>
+            {
+            "Arctic Tundra",
+            "Boreal Forests/Taiga",
+            "Deserts and Xeric Shrublands",
+            "Temperate Coniferous Forests",
+            "Temperate Deciduous Forests",
+            "Temperate Grasslands, Savannas, and Shrublands",
+            "Tropical and Subtropical Coniferous Forests",
+            "Tropical and Sub" };
+            }
+        }
+    }
 }
