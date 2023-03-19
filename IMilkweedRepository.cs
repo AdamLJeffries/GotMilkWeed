@@ -1,6 +1,9 @@
-﻿namespace GotMilkWeed
-{
-    public interface IMilkweedRepository
+﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+
+using GotMilkWeed;
+
+public interface IMilkweedRepository
     {
         Task<List<MilkweedVariety>> GetAllAsync();
         Task<MilkweedVariety> GetByIdAsync(int id);
@@ -8,6 +11,4 @@
         Task UpdateAsync(MilkweedVariety variety);
         Task DeleteAsync(int id);
     }
-}
-
 

@@ -1,4 +1,7 @@
-﻿namespace GotMilkWeed
+﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+
+namespace GotMilkWeed
 {
     public class MilkweedVariety
     {

@@ -1,112 +1,95 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace GotMilkWeed.Controllers
 {
     [ApiController]
-    [Route("api/[controller]")]
-    public class MilkweedController : ControllerBase
+    [Route("[controller]")]
+    public class MilkweedVarietiesController : ControllerBase
     {
-        private readonly IMilkweedRepository _repository;
+        private readonly MilkweedDbContext _context;
 
-        public MilkweedController(IMilkweedRepository repository)
+        public MilkweedVarietiesController(MilkweedDbContext context)
         {
-            _repository = repository;
+            _context = context;
         }
 
         [HttpGet]
-        public async Task<ActionResult<List<MilkweedVariety>>> GetAllAsync()
+        public async Task<ActionResult<IEnumerable<MilkweedVariety>>> GetAllMilkweedVarieties()
         {
-            var varieties = await _repository.GetAllAsync();
-            return Ok(varieties);
+            return await _context.GetMilkweedVarieties().ToListAsync();
         }
 
         [HttpGet("{id}")]
-        public async Task<ActionResult<MilkweedVariety>> GetByIdAsync(int id)
+        public async Task<ActionResult<MilkweedVariety>> GetMilkweedVariety(int id)
         {
-            var variety = await _repository.GetByIdAsync(id);
-            if (variety == null)
+            var milkweedVariety = await _context.GetMilkweedVarieties().FindAsync(id);
+
+            if (milkweedVariety == null)
             {
                 return NotFound();
             }
-            return Ok(variety);
+
+            return milkweedVariety;
         }
 
         [HttpPost]
-        public async Task<ActionResult> CreateAsync(MilkweedVariety variety)
+        public async Task<ActionResult<MilkweedVariety>> AddMilkweedVariety(MilkweedVariety milkweedVariety)
         {
-            await _repository.CreateAsync(variety);
-            return CreatedAtAction(nameof(GetByIdAsync), new { id = variety.Id }, variety);
+            _context.GetMilkweedVarieties().Add(milkweedVariety);
+            await _context.SaveChangesAsync();
+
+            return CreatedAtAction(nameof(GetMilkweedVariety), new { id = milkweedVariety.Id }, milkweedVariety);
         }
 
         [HttpPut("{id}")]
-        public async Task<ActionResult> UpdateAsync(int id, MilkweedVariety variety)
+        public async Task<IActionResult> UpdateMilkweedVariety(int id, MilkweedVariety milkweedVariety)
         {
-            if (id != variety.Id)
+            if (id != milkweedVariety.Id)
             {
                 return BadRequest();
             }
-            await _repository.UpdateAsync(variety);
+
+            _context.Entry(milkweedVariety).State = EntityState.Modified;
+
+            try
+            {
+                await _context.SaveChangesAsync();
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                if (!MilkweedVarietyExists(id))
+                {
+                    return NotFound();
+                }
+                else
+                {
+                    throw;
+                }
+            }
+
             return NoContent();
         }
 
         [HttpDelete("{id}")]
-        public async Task<ActionResult> DeleteAsync(int id)
+        public async Task<IActionResult> DeleteMilkweedVariety(int id)
         {
-            var variety = await _repository.GetByIdAsync(id);
-            if (variety == null)
+            var milkweedVariety = await _context.GetMilkweedVarieties().FindAsync(id);
+
+            if (milkweedVariety == null)
             {
                 return NotFound();
             }
-            await _repository.DeleteAsync(id);
+
+            _context.GetMilkweedVarieties().Remove(milkweedVariety);
+            await _context.SaveChangesAsync();
+
             return NoContent();
         }
 
-        [HttpGet("region/{region}")]
-        public async Task<ActionResult<List<MilkweedVariety>>> GetByRegionAsync(string region)
+        private bool MilkweedVarietyExists(int id)
         {
-            var varieties = await _repository.GetAllAsync();
-            var filteredVarieties = varieties.Where(v => v.Region.ToLower() == region.ToLower()).ToList();
-            return Ok(filteredVarieties);
-        }
-
-        [HttpGet("toxic/{isToxic}")]
-        public async Task<ActionResult<List<MilkweedVariety>>> GetByToxicityAsync(bool isToxic)
-        {
-            var varieties = await _repository.GetAllAsync();
-            var filteredVarieties = varieties.Where(v => v.IsToxicToMonarchs == isToxic).ToList();
-            return Ok(filteredVarieties);
-        }
-
-        [HttpGet("region/{region}/toxic/{isToxic}")]
-        public async Task<ActionResult<List<MilkweedVariety>>> GetByRegionAndToxicityAsync(string region, bool isToxic)
-        {
-            var varieties = await _repository.GetAllAsync();
-            var filteredVarieties = varieties.Where(v => v.Region.ToLower() == region.ToLower() && v.IsToxicToMonarchs == isToxic).ToList();
-            return Ok(filteredVarieties);
-        }
-
-        [HttpGet("regions")]
-        public ActionResult<List<string>> GetRegions()
-        {
-            var varieties = _repository.GetAllAsync().Result;
-            var regions = varieties.Select(v => v.Region).Distinct().ToList();
-            return Ok(regions);
-        }
-
-        [HttpGet("ecoregions")]
-        public string GetEcoregions()
-        {
-            var ecoregions = new List<string>
-            {
-            "Arctic Tundra",
-            "Boreal Forests/Taiga",
-            "Deserts and Xeric Shrublands",
-            "Temperate Coniferous Forests",
-            "Temperate Deciduous Forests",
-            "Temperate Grasslands, Savannas, and Shrublands",
-            "Tropical and Subtropical Coniferous Forests",
-            "Tropical and Sub" };
-            }
+            return _context.GetMilkweedVarieties().Any(e => e.Id == id);
         }
     }
 }
